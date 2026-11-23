@@ -25,7 +25,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import LDS02, LHT65, LT22222, LWL02, DraginoDevice
+from ._vendor.dragino_lorawan import (
+    CPL03LB,
+    LDS02,
+    LHT65,
+    LT22222,
+    LWL02,
+    DraginoDevice,
+)
 from ._vendor.dragino_lorawan.contact import ContactDevice
 from .coordinator import DraginoCoordinator
 from .entity import DraginoEntity, async_setup_entities
@@ -92,7 +99,7 @@ async def async_setup_entry(
 
     @callback
     def added(coordinator: DraginoCoordinator) -> None:
-        if isinstance(coordinator.data, (LHT65, LDS02, LWL02)):
+        if isinstance(coordinator.data, (LHT65, LDS02, LWL02, CPL03LB)):
             async_add_entities(
                 [
                     DraginoBattery(
@@ -116,6 +123,11 @@ async def async_setup_entry(
             async_add_entities(
                 ContactSensor(coordinator, description)
                 for description in CONTACT_SENSORS
+            )
+        elif isinstance(coordinator.data, CPL03LB):
+            async_add_entities(
+                CPL03LBSensor(coordinator, description)
+                for description in CPL03LB_SENSORS
             )
 
     entry.async_on_unload(entry.runtime_data.subscribe_coordinator_added(added))
@@ -284,6 +296,94 @@ class ContactSensor(LoRaWANEntity[DraginoDevice], SensorEntity):
         if TYPE_CHECKING:
             assert isinstance(device, ContactDevice)
         return self.entity_description.value_fn(device)
+
+
+@dataclass(frozen=True, kw_only=True)
+class CPL03LBSensorDescription(SensorEntityDescription):
+    """Describe a pulse-contact measurement."""
+
+    value_fn: Callable[[CPL03LB], str | float | int | None]
+
+
+CPL03LB_SENSORS = (
+    CPL03LBSensorDescription(
+        key="firmware_version",
+        translation_key="firmware_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.firmware_version,
+    ),
+    CPL03LBSensorDescription(
+        key="work_mode",
+        translation_key="cpl03lb_work_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cpl01", "cpl03", "interrupt"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.work_mode,
+    ),
+    CPL03LBSensorDescription(
+        key="battery_voltage",
+        translation_key="battery_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.battery_voltage,
+    ),
+    CPL03LBSensorDescription(
+        key="last_duration",
+        translation_key="last_duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.last_duration,
+    ),
+    *(
+        CPL03LBSensorDescription(
+            key=key,
+            translation_key=key,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            value_fn=value_fn,
+        )
+        for key, value_fn in (
+            ("pulse_count", lambda device: device.pulse_count),
+            ("pa8_count", lambda device: device.pa8_count),
+            ("pa4_count", lambda device: device.pa4_count),
+            ("pb15_count", lambda device: device.pb15_count),
+        )
+    ),
+)
+
+
+class CPL03LBSensor(LoRaWANEntity[CPL03LB], SensorEntity):
+    """Represent a CPL03-LB measurement."""
+
+    coordinator: DraginoCoordinator
+    entity_description: CPL03LBSensorDescription
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        return self.coordinator.device_info
+
+    @property
+    @override
+    def native_value(self) -> str | float | int | None:
+        return self.entity_description.value_fn(self.device)
+
+    @property
+    @override
+    def state_class(self) -> SensorStateClass | None:
+        """Do not treat interval pulse counts (CMOD=PART) as cumulative totals."""
+        if (
+            self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
+            and self.device.counts_are_cumulative is not True
+        ):
+            return None
+        return self.entity_description.state_class
 
 
 class DraginoBattery(LoRaWANEntity[DraginoDevice], SensorEntity):

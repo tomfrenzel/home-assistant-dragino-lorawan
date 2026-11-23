@@ -11,13 +11,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.dragino_lorawan._vendor.dragino_lorawan import (
+    CPL03LB,
     LDS02,
     LHT65,
     LWL02,
 )
 
 
-@pytest.fixture(params=[LHT65, LDS02, LWL02])
+@pytest.fixture(params=[LHT65, LDS02, LWL02, CPL03LB])
 def descriptor(request) -> DeviceDescriptor:
     """Describe each battery-powered model."""
     brand, model = request.param.identifiers["tts"]
@@ -74,11 +75,12 @@ async def test_uplink_battery_fallback(
     """Prefer status, preserve zero, and fall back to the profile estimate."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    # LHT65 has no voltage-to-percentage calculation in the reference profiles.
+    # LHT65 and CPL03-LB do not estimate percentages from voltage.
     payload = {
         "lht65": (2, "0b88010001f40200000000"),
         "lds02": (10, "0b880100000000000000"),
         "lwl02": (10, "0b8802000000000000"),
+        "cpl03-lb": (5, "20011101ff0b45"),
     }[descriptor.model_id]
     mock_connection.emit(
         UplinkEvent(
@@ -89,7 +91,7 @@ async def test_uplink_battery_fallback(
         )
     )
     await hass.async_block_till_done()
-    expected = "unknown" if descriptor.model_id == "lht65" else "85"
+    expected = "unknown" if descriptor.model_id in ("lht65", "cpl03-lb") else "85"
     assert hass.states.get("sensor.garden_battery").state == expected
     status = StatusEvent(
         descriptor=descriptor,
