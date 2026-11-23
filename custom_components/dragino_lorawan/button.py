@@ -1,5 +1,6 @@
 """Dragino buttons."""
 
+from asyncio import timeout
 from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -9,10 +10,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from lorawan_connection import DownlinkError
+from lorawan_connection import ConnectionUnavailable, DownlinkError
 
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import LWL02
+from ._vendor.dragino_lorawan import CPL03LB, LWL02
 from .const import DOMAIN
 from .coordinator import DraginoCoordinator
 
@@ -30,6 +31,8 @@ async def async_setup_entry(
     def added(coordinator: DraginoCoordinator) -> None:
         if isinstance(coordinator.data, LWL02):
             async_add_entities([DraginoRequestReset(coordinator)])
+        elif isinstance(coordinator.data, CPL03LB):
+            async_add_entities([CPL03LBRequestStatus(coordinator)])
 
     entry.async_on_unload(entry.runtime_data.subscribe_coordinator_added(added))
 
@@ -60,6 +63,42 @@ class DraginoRequestReset(LoRaWANEntity[LWL02], ButtonEntity):
         try:
             await self.device.async_reset_count()
         except (DownlinkError, TimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            ) from err
+
+
+class CPL03LBRequestStatus(LoRaWANEntity[CPL03LB], ButtonEntity):
+    """Request device information without assuming a response has arrived."""
+
+    coordinator: DraginoCoordinator
+
+    def __init__(self, coordinator: DraginoCoordinator) -> None:
+        """Initialize the status request button."""
+        super().__init__(
+            coordinator,
+            ButtonEntityDescription(
+                key="request_device_status",
+                translation_key="request_device_status",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+        )
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        return self.coordinator.device_info
+
+    @override
+    async def async_press(self) -> None:
+        try:
+            async with timeout(30):
+                await self.device.async_request_device_status()
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_queue_timeout"
+            ) from err
+        except (DownlinkError, ConnectionUnavailable) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_failed"
             ) from err

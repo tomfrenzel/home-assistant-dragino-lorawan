@@ -14,6 +14,18 @@
   },
   "entity": {
     "binary_sensor": {
+      "contact_alarm": {
+        "name": "Contact alarm"
+      },
+      "pa8_open": {
+        "name": "PA8 contact"
+      },
+      "pa4_open": {
+        "name": "PA4 contact"
+      },
+      "pb15_open": {
+        "name": "PB15 contact"
+      },
       "digital_input": {
         "name": "Digital input {channel}"
       },
@@ -22,6 +34,29 @@
       }
     },
     "sensor": {
+      "cpl03lb_work_mode": {
+        "name": "Work mode",
+        "state": {
+          "cpl01": "Single contact",
+          "cpl03": "Three pulse counters",
+          "interrupt": "Three contact inputs"
+        }
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "pulse_count": {
+        "name": "Pulse count"
+      },
+      "pa8_count": {
+        "name": "PA8 pulse count"
+      },
+      "pa4_count": {
+        "name": "PA4 pulse count"
+      },
+      "pb15_count": {
+        "name": "PB15 pulse count"
+      },
       "battery_voltage": {
         "name": "Battery voltage"
       },
@@ -62,6 +97,9 @@
       }
     },
     "button": {
+      "request_device_status": {
+        "name": "Request device status"
+      },
       "request_reset": {
         "name": "Request reset"
       }
@@ -73,6 +111,9 @@
     }
   },
   "exceptions": {
+    "command_queue_timeout": {
+      "message": "Timed out queueing the command. It may still be queued on the network server."
+    },
     "command_failed": {
       "message": "Unable to send the command. Check the LoRaWAN connection and the API key\u2019s write permission."
     },

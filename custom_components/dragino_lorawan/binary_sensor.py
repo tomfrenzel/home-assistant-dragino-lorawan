@@ -1,5 +1,7 @@
 """Dragino binary sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
@@ -13,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import LDS02, LWL02, DraginoDevice
+from ._vendor.dragino_lorawan import CPL03LB, LDS02, LWL02, DraginoDevice
 from .coordinator import DraginoCoordinator
 from .entity import DraginoEntity, async_setup_entities
 
@@ -69,6 +71,11 @@ async def async_setup_entry(
                     )
                 ]
             )
+        elif isinstance(coordinator.data, CPL03LB):
+            async_add_entities(
+                CPL03LBBinarySensor(coordinator, description)
+                for description in CPL03LB_BINARY_SENSORS
+            )
 
     entry.async_on_unload(entry.runtime_data.subscribe_coordinator_added(added))
 
@@ -105,3 +112,55 @@ class ContactSensor(LoRaWANEntity[DraginoDevice], BinarySensorEntity):
         if TYPE_CHECKING:
             assert isinstance(device, (LDS02, LWL02))
         return device.alarm if self.entity_description.key == "alarm" else device.active
+
+
+@dataclass(frozen=True, kw_only=True)
+class CPL03LBBinarySensorDescription(BinarySensorEntityDescription):
+    """Describe a dry-contact level or alarm."""
+
+    value_fn: Callable[[CPL03LB], bool | None]
+
+
+CPL03LB_BINARY_SENSORS = (
+    CPL03LBBinarySensorDescription(
+        key="contact_open",
+        device_class=BinarySensorDeviceClass.OPENING,
+        value_fn=lambda device: device.contact_open,
+    ),
+    CPL03LBBinarySensorDescription(
+        key="alarm",
+        translation_key="contact_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda device: device.alarm,
+    ),
+    *(
+        CPL03LBBinarySensorDescription(
+            key=key,
+            translation_key=key,
+            device_class=BinarySensorDeviceClass.OPENING,
+            value_fn=value_fn,
+        )
+        for key, value_fn in (
+            ("pa8_open", lambda device: device.pa8_open),
+            ("pa4_open", lambda device: device.pa4_open),
+            ("pb15_open", lambda device: device.pb15_open),
+        )
+    ),
+)
+
+
+class CPL03LBBinarySensor(LoRaWANEntity[CPL03LB], BinarySensorEntity):
+    """Represent a CPL03-LB contact or alarm without inventing initial levels."""
+
+    coordinator: DraginoCoordinator
+    entity_description: CPL03LBBinarySensorDescription
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        return self.coordinator.device_info
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        return self.entity_description.value_fn(self.device)

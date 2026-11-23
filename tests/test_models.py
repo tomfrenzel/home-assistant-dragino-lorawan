@@ -2,12 +2,14 @@
 
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from unittest.mock import Mock
 
 from lorawan_connection import DeviceDescriptor, UplinkEvent
 from lorawan_connection.mock import MockConnection
 import pytest
 
 from custom_components.dragino_lorawan._vendor.dragino_lorawan import (
+    CPL03LB,
     LHT65,
     DraginoDevices,
 )
@@ -66,3 +68,193 @@ def test_invalid_payload(payload: str) -> None:
     """Reject incomplete frames and invalid humidity."""
     with pytest.raises(ValueError):
         LHT65.decode(bytes.fromhex(payload))
+
+
+@pytest.mark.parametrize(
+    ("port", "payload", "expected"),
+    [
+        (
+            2,
+            "37ffffff010203ffffffff",
+            {
+                "work_mode": "cpl01",
+                "counts_are_cumulative": False,
+                "contact_open": True,
+                "alarm": True,
+                "pulse_count": 16777215,
+                "last_duration": 66051,
+            },
+        ),
+        (
+            2,
+            "0000000200003c00000000",
+            {"contact_open": False, "alarm": False, "last_duration": 60},
+        ),
+        (
+            6,
+            "3f800000ffffff01020305",
+            {
+                "work_mode": "cpl03",
+                "counts_are_cumulative": False,
+                "pa8_count": 8388608,
+                "pa4_count": 16777215,
+                "pb15_count": 66051,
+            },
+        ),
+        (
+            6,
+            "08000005000006ffffff",
+            {
+                "counts_are_cumulative": True,
+                "pa8_count": 5,
+                "pa4_count": 6,
+                "pb15_count": 16777215,
+            },
+        ),
+        (
+            7,
+            "19",
+            {"pa8_open": False, "pa4_open": True, "pb15_open": False},
+        ),
+        (
+            7,
+            "26ffffffffffffffffffff",
+            {"pa8_open": True, "pa4_open": False, "pb15_open": True},
+        ),
+        (5, "20011101ff0b45", {"firmware_version": "1.1.1", "battery_voltage": 2.885}),
+        (5, "20011102030e10", {"firmware_version": "1.1.1", "battery_voltage": 3.6}),
+    ],
+)
+def test_cpl03lb_codec_examples(
+    port: int, payload: str, expected: dict[str, str | float | int | bool]
+) -> None:
+    """Match the ChirpStack catalog's unsigned values, units, and contact bits."""
+    values = CPL03LB.decode(port, bytes.fromhex(payload))
+    assert values.items() >= expected.items()
+
+
+@pytest.mark.parametrize(
+    ("port", "payload"),
+    [
+        (port, data[:length])
+        for port, data in (
+            (2, bytes(11)),
+            (5, bytes.fromhex("20011101ff0b45")),
+            (6, bytes.fromhex("08000005000006000007")),
+            (7, b"\x00"),
+        )
+        for length in range(len(data))
+    ]
+    + [
+        (2, bytes(12)),
+        (5, bytes.fromhex("20011101ff0b4500")),
+        (6, b"\x08" + bytes(11)),
+        (2, b"\x08" + bytes(10)),
+        (6, bytes(10)),
+        (5, bytes.fromhex("21011101ff0b45")),
+        (5, bytes.fromhex("20011100ff0b45")),
+        (5, bytes.fromhex("2001110fff0b45")),
+    ],
+)
+def test_cpl03lb_invalid_payload(port: int, payload: bytes) -> None:
+    """Reject truncated, oversized, mismatched-mode, and wrong-model packets."""
+    with pytest.raises(ValueError):
+        CPL03LB.decode(port, payload)
+
+
+@pytest.mark.parametrize("port", [3, 4, 8, 99])
+def test_cpl03lb_non_measurements(port: int) -> None:
+    """Do not turn history, configuration, or unknown layouts into live readings."""
+    assert CPL03LB.decode(port, bytes(11)) == {}
+
+
+def test_cpl03lb_partial_and_stale_updates(descriptor: DeviceDescriptor) -> None:
+    """Retain independent reports and reject older values without notifying."""
+    device = CPL03LB(descriptor)
+    notified = Mock()
+    device.add_update_listener(notified)
+    event = UplinkEvent(
+        descriptor=descriptor,
+        received_at=datetime(2026, 1, 1, tzinfo=UTC),
+        f_port=2,
+        data=bytes.fromhex("0300000200003c00000000"),
+    )
+    device.handle_event(event)
+    status = replace(
+        event,
+        received_at=event.received_at + timedelta(seconds=2),
+        f_port=5,
+        data=bytes.fromhex("20011101ff0b45"),
+    )
+    device.handle_event(status)
+    # A status report must not suppress a delayed but newer contact reading.
+    contact = replace(
+        event, received_at=event.received_at + timedelta(seconds=1), data=bytes(11)
+    )
+    device.handle_event(contact)
+    assert device.contact_open is False
+    assert device.pulse_count == 0
+    assert device.battery_voltage == 2.885
+    assert notified.call_count == 3
+    for ignored in (
+        event,
+        replace(status, received_at=event.received_at),
+        replace(status, data=b""),
+        replace(status, f_port=99),
+    ):
+        device.handle_event(ignored)
+    assert notified.call_count == 3
+    device.close()
+    device.handle_event(replace(event, received_at=status.received_at))
+    assert notified.call_count == 3
+    assert device.contact_open is False
+
+
+def test_cpl03lb_mode_changes(descriptor: DeviceDescriptor) -> None:
+    """Clear all inactive-mode readings, including stale interrupt levels."""
+    device = CPL03LB(descriptor)
+    event = UplinkEvent(
+        descriptor=descriptor,
+        received_at=datetime(2026, 1, 1, tzinfo=UTC),
+        f_port=7,
+        data=b"\x00",
+    )
+    device.handle_event(event)
+    assert device.work_mode == "interrupt"
+    assert device.pa8_open is True
+    single = replace(
+        event,
+        received_at=event.received_at + timedelta(seconds=1),
+        f_port=2,
+        data=bytes.fromhex("0300000200003c00000000"),
+    )
+    device.handle_event(single)
+    assert device.work_mode == "cpl01"
+    assert device.contact_open is True
+    assert device.pa8_open is None
+    assert device.pa8_count is None
+    pulse = replace(
+        event,
+        received_at=event.received_at + timedelta(seconds=2),
+        f_port=6,
+        data=bytes.fromhex("08000005000006000007"),
+    )
+    device.handle_event(pulse)
+    assert device.work_mode == "cpl03"
+    assert device.pa8_count == 5
+    assert device.contact_open is None
+    assert device.alarm is None
+    assert device.pulse_count is None
+    assert device.last_duration is None
+    device.handle_event(single)
+    device.handle_event(event)
+    assert device.work_mode == "cpl03"
+    assert device.pa8_count == 5
+    assert device.pa8_open is None
+    device.handle_event(
+        replace(event, received_at=event.received_at + timedelta(seconds=3))
+    )
+    assert device.work_mode == "interrupt"
+    assert device.pa8_count is None
+    assert device.pa8_open is True
+    assert device.counts_are_cumulative is None
