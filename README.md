@@ -89,25 +89,4 @@ Brand images are included in the integration's `brand` directory.
 
 ## Development
 
-The device library is bundled under `custom_components/dragino_lorawan/_vendor`.
-It uses the shared LoRaWAN dependency provided by Home Assistant.
-
-Tests use Home Assistant's official pytest helpers and an in-memory connection.
-They cover discovery, decoded readings, entity identity, connection loss,
-reconnection, and removal, plus output commands and errors.
-Payload tests use codec examples, including the ChirpStack LDS02 and LWL02 fixtures. LT-22222-L commands were also exercised against a simulated ChirpStack radio during the original PoC.
-
-```sh
-uv sync --group dev
-uv run python script/prepare_tests.py
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
-```
-
-The development environment pins Core and its test helpers to the same revision.
-CI also tests current Home Assistant `dev`.
-
-Payload references: [Dragino TTN codecs](https://github.com/TheThingsNetwork/lorawan-devices/tree/master/vendor/dragino).
-
-LDS02 and LWL02 profiles were identified from [LoRaWANDeviceProfiles](https://github.com/BenAhrdt/LoRaWANDeviceProfiles/tree/main/DeviceProfiles/Dragino) and checked against the [ChirpStack catalog](https://github.com/chirpstack/chirpstack-device-profiles/tree/master/vendors/dragino).
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for the development setup, tests, and payload references.
