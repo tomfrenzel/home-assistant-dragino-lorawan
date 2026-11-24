@@ -29,13 +29,14 @@ Assistant `config/custom_components` directory and restart.
 
 | Model | Entities | Connections |
 | --- | --- | --- |
-| LT-22222-L | Two relays, two digital outputs, two digital inputs, voltage, current, and counters | ChirpStack and The Things Network / The Things Stack |
+| LT-22222-L | Two relays, two digital outputs, two digital inputs, voltage, current, counters, and firmware | ChirpStack and The Things Network / The Things Stack |
 | LDS02 | Door state, open alarm, event count, last opening duration, battery percentage, and battery voltage | ChirpStack and The Things Network / The Things Stack |
 | LWL02 | Water leak, event count, last leak duration, battery percentage, battery voltage, reporting interval, and Request reset | ChirpStack and The Things Network / The Things Stack |
 | LHT65 | Temperature, humidity, battery percentage, battery voltage, and external probe readings | The Things Network / The Things Stack |
 | CPL03-LB | Single contact and alarm, three pulse counters or three contact inputs, last event duration, battery percentage, battery voltage, firmware, work mode, and Request device status | ChirpStack and The Things Network / The Things Stack |
 
-LT-22222-L input measurements depend on its reporting mode. LHT65 illuminance,
+LT-22222-L input measurements depend on its reporting mode. Its firmware version
+comes from the port-5 device-status report that it sends after joining. LHT65 illuminance,
 external voltage, and external counter entities are disabled by default; enable
 the ones that match your attached probe.
 

@@ -42,6 +42,8 @@ class LT22222(DraginoBaseDevice):
         self.currents: dict[int, float | None] = {1: None, 2: None}
         self.digital_counts: dict[int, int | None] = {1: None, 2: None}
         self.voltage_count: int | None = None
+        self.firmware_version: str | None = None
+        self._status_updated: datetime | None = None
 
     @override
     def handle_event(self, event: DeviceEvent) -> None:
@@ -49,6 +51,9 @@ class LT22222(DraginoBaseDevice):
             return
         self._update_signal(event)
         data = event.data
+        if event.f_port == 5:
+            self._handle_status(event.received_at, data)
+            return
         if event.f_port != 2 or len(data) != 11:
             return
         # Trigger reports contain flags, not input measurements or output states.
@@ -98,6 +103,17 @@ class LT22222(DraginoBaseDevice):
         self.currents = currents
         self.digital_counts = digital_counts
         self.voltage_count = voltage_count
+        self.notify()
+
+    def _handle_status(self, received_at: datetime, data: bytes) -> None:
+        """Apply a device-status report: band, sub-band, firmware, interval."""
+        if len(data) != 7 or not 1 <= data[0] <= 0x0F:
+            _LOGGER.debug("Ignoring invalid LT-22222-L status report")
+            return
+        if self._status_updated is not None and received_at < self._status_updated:
+            return
+        self.firmware_version = f"{data[2] & 0x0F}.{data[3] >> 4}.{data[3] & 0x0F}"
+        self._status_updated = received_at
         self.notify()
 
     async def async_set_relay(

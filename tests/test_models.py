@@ -11,6 +11,7 @@ import pytest
 from custom_components.dragino_lorawan._vendor.dragino_lorawan import (
     CPL03LB,
     LHT65,
+    LT22222,
     DraginoDevices,
 )
 
@@ -258,3 +259,32 @@ def test_cpl03lb_mode_changes(descriptor: DeviceDescriptor) -> None:
     assert device.pa8_count is None
     assert device.pa8_open is True
     assert device.counts_are_cumulative is None
+
+
+def test_lt22222_status(descriptor: DeviceDescriptor) -> None:
+    """Decode the firmware version of a port-5 status report."""
+    device = LT22222(descriptor)
+    notified = Mock()
+    device.add_update_listener(notified)
+    # EU868, no sub-band, firmware 1.1.3, 600 s interval.
+    status = UplinkEvent(
+        descriptor=descriptor,
+        received_at=datetime(2026, 1, 1, tzinfo=UTC),
+        f_port=5,
+        data=bytes.fromhex("01ff0113000258"),
+    )
+    device.handle_event(status)
+    assert device.firmware_version == "1.1.3"
+    assert device.mode is None
+    assert notified.call_count == 1
+    newer = bytes.fromhex("01ff0220000258")
+    for ignored in (
+        replace(
+            status, received_at=status.received_at - timedelta(seconds=1), data=newer
+        ),
+        replace(status, data=newer[:6]),
+        replace(status, data=b"\x00" + newer[1:]),
+    ):
+        device.handle_event(ignored)
+    assert device.firmware_version == "1.1.3"
+    assert notified.call_count == 1
