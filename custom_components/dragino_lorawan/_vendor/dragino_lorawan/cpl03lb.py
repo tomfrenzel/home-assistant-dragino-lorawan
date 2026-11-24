@@ -4,7 +4,9 @@ from datetime import datetime
 import logging
 from typing import override
 
-from lorawan_connection import Device, DeviceDescriptor, DeviceEvent, EventType
+from lorawan_connection import DeviceDescriptor, DeviceEvent, EventType
+
+from .base import DraginoBaseDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,7 +15,7 @@ _COUNTER_FIELDS = ("pa8_count", "pa4_count", "pb15_count")
 _CONTACT_FIELDS = ("pa8_open", "pa4_open", "pb15_open")
 
 
-class CPL03LB(Device):
+class CPL03LB(DraginoBaseDevice):
     """A single-contact, three-counter, or three-interrupt sensor."""
 
     identifiers = {
@@ -46,6 +48,7 @@ class CPL03LB(Device):
         """Apply validated, current fields without replacing unrelated readings."""
         if self.closed or event.type != EventType.UPLINK:
             return
+        self._update_signal(event)
         try:
             values = self.decode(event.f_port, event.data)
         except ValueError as err:

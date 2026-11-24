@@ -4,10 +4,12 @@ from datetime import datetime
 from math import floor
 from typing import override
 
-from lorawan_connection import Device, DeviceDescriptor, DeviceEvent, EventType
+from lorawan_connection import DeviceDescriptor, DeviceEvent, EventType
+
+from .base import DraginoBaseDevice
 
 
-class ContactDevice(Device):
+class ContactDevice(DraginoBaseDevice):
     """Door and leak telemetry."""
 
     model_name: str
@@ -34,7 +36,10 @@ class ContactDevice(Device):
 
     @override
     def handle_event(self, event: DeviceEvent) -> None:
-        if self.closed or event.type != EventType.UPLINK or event.f_port != 10:
+        if self.closed or event.type != EventType.UPLINK:
+            return
+        self._update_signal(event)
+        if event.f_port != 10:
             return
         data = event.data
         if len(data) < 3 or data[2] not in (self.mode, 3):

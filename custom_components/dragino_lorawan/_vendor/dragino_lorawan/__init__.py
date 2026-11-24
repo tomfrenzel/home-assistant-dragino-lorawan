@@ -5,13 +5,13 @@ import logging
 from typing import override
 
 from lorawan_connection import (
-    Device,
     DeviceCollection,
     DeviceDescriptor,
     DeviceEvent,
     EventType,
 )
 
+from .base import DraginoBaseDevice
 from .contact import LDS02, LWL02
 from .cpl03lb import CPL03LB
 from .lht65 import LHT65
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 VENDOR_ID = 676
 
 
-class LT22222(Device):
+class LT22222(DraginoBaseDevice):
     """Model for the Dragino LT-22222-L."""
 
     model_name = "LT-22222-L"
@@ -47,6 +47,7 @@ class LT22222(Device):
     def handle_event(self, event: DeviceEvent) -> None:
         if self.closed or event.type != EventType.UPLINK:
             return
+        self._update_signal(event)
         data = event.data
         if event.f_port != 2 or len(data) != 11:
             return

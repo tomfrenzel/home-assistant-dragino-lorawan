@@ -3,10 +3,12 @@
 from datetime import datetime
 from typing import override
 
-from lorawan_connection import Device, DeviceDescriptor, DeviceEvent, EventType
+from lorawan_connection import DeviceDescriptor, DeviceEvent, EventType
+
+from .base import DraginoBaseDevice
 
 
-class LHT65(Device):
+class LHT65(DraginoBaseDevice):
     """Dragino LHT65 device."""
 
     identifiers = {"tts": ("dragino", "lht65")}
@@ -29,7 +31,10 @@ class LHT65(Device):
 
     @override
     def handle_event(self, event: DeviceEvent) -> None:
-        if self.closed or event.type != EventType.UPLINK or event.f_port != 2:
+        if self.closed or event.type != EventType.UPLINK:
+            return
+        self._update_signal(event)
+        if event.f_port != 2:
             return
         try:
             values = self.decode(event.data)
