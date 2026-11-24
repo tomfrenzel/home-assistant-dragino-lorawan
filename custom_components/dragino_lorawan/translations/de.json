@@ -1,0 +1,127 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Dragino ist bereits eingerichtet",
+      "no_lorawan_connections": "Richte zuerst eine LoRaWAN-Verbindung ein.",
+      "no_supported_devices": "In deinen LoRaWAN-Verbindungen wurden keine unterstützten Dragino-Geräte gefunden.",
+      "single_instance_allowed": "Dragino ist bereits eingerichtet"
+    },
+    "step": {
+      "confirm": {
+        "description": "Richte Dragino-Geräte aus deinen LoRaWAN-Verbindungen ein."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "contact_alarm": {
+        "name": "Kontaktalarm"
+      },
+      "pa8_open": {
+        "name": "Kontakt PA8"
+      },
+      "pa4_open": {
+        "name": "Kontakt PA4"
+      },
+      "pb15_open": {
+        "name": "Kontakt PB15"
+      },
+      "digital_input": {
+        "name": "Digitaleingang {channel}"
+      },
+      "door_open_alarm": {
+        "name": "Alarm Tür offen"
+      }
+    },
+    "sensor": {
+      "cpl03lb_work_mode": {
+        "name": "Betriebsmodus",
+        "state": {
+          "cpl01": "Ein Kontakt",
+          "cpl03": "Drei Impulszähler",
+          "interrupt": "Drei Kontakteingänge"
+        }
+      },
+      "firmware_version": {
+        "name": "Firmware-Version"
+      },
+      "pulse_count": {
+        "name": "Impulszähler"
+      },
+      "pa8_count": {
+        "name": "Impulszähler PA8"
+      },
+      "pa4_count": {
+        "name": "Impulszähler PA4"
+      },
+      "pb15_count": {
+        "name": "Impulszähler PB15"
+      },
+      "battery_voltage": {
+        "name": "Batteriespannung"
+      },
+      "current": {
+        "name": "Strom {channel}"
+      },
+      "digital_count": {
+        "name": "Digitalzähler {channel}"
+      },
+      "external_count": {
+        "name": "Externer Zähler"
+      },
+      "external_temperature": {
+        "name": "Externe Temperatur"
+      },
+      "external_voltage": {
+        "name": "Externe Spannung"
+      },
+      "voltage": {
+        "name": "Spannung {channel}"
+      },
+      "voltage_count": {
+        "name": "Spannungszähler {channel}"
+      },
+      "event_count": {
+        "name": "Ereignisanzahl"
+      },
+      "last_duration": {
+        "name": "Dauer des letzten Ereignisses"
+      }
+    },
+    "switch": {
+      "digital_output": {
+        "name": "Digitalausgang {channel}"
+      },
+      "relay": {
+        "name": "Relais {channel}"
+      }
+    },
+    "button": {
+      "request_device_status": {
+        "name": "Gerätestatus anfordern"
+      },
+      "request_reset": {
+        "name": "Zurücksetzen anfordern"
+      }
+    },
+    "number": {
+      "reporting_interval": {
+        "name": "Sendeintervall"
+      }
+    }
+  },
+  "exceptions": {
+    "command_queue_timeout": {
+      "message": "Zeitüberschreitung beim Einreihen des Befehls. Er könnte trotzdem beim Netzwerkserver eingereiht sein."
+    },
+    "command_failed": {
+      "message": "Der Befehl konnte nicht gesendet werden. Prüfe die LoRaWAN-Verbindung und die Schreibberechtigung des API-Schlüssels."
+    },
+    "command_timeout": {
+      "message": "Zeitüberschreitung beim Warten auf die Bestätigung des Geräts."
+    },
+    "interval_whole_seconds": {
+      "message": "Das Sendeintervall muss eine ganze Zahl von Sekunden sein."
+    }
+  }
+}
