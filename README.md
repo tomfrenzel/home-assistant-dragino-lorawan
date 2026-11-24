@@ -1,9 +1,17 @@
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=balloobbot&repository=home-assistant-dragino-lorawan&category=integration)
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tomfrenzel&repository=home-assistant-dragino-lorawan&category=integration)
 
 # Dragino LoRaWAN
 
 Use Dragino devices with Home Assistant's LoRaWAN connections.
 Requires Home Assistant 2026.11.0b0 or newer, including 2026.11 beta releases.
+
+## Maintenance
+
+This integration started as Balloob's (@balloob) proof of concept. With his
+agreement, maintenance has moved to
+[tomfrenzel/home-assistant-dragino-lorawan](https://github.com/tomfrenzel/home-assistant-dragino-lorawan).
+All new development will happen in this repository, not the original
+balloobbot repository. Please submit issues and pull requests here.
 
 ## Install
 
