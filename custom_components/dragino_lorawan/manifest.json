@@ -1,10 +1,16 @@
 {
   "domain": "dragino_lorawan",
   "name": "Dragino LoRaWAN",
+  "categories": [
+    "sensors"
+  ],
   "codeowners": [
     "@tomfrenzel"
   ],
   "config_flow": true,
+  "connectivity": [
+    "lorawan"
+  ],
   "dependencies": [
     "lorawan"
   ],
