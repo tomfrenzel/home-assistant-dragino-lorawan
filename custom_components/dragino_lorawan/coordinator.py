@@ -8,7 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from ._vendor.dragino_lorawan import DraginoDevice
+from dragino_lorawan import DraginoDevice
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

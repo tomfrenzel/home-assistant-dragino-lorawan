@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14.2"
 
 [[package]]
@@ -925,6 +925,18 @@ wheels = [
 ]
 
 [[package]]
+name = "dragino-lorawan"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lorawan-connection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cd/18/71e82cb64f891883106f1a4e8a08691929372eb1e575ec3218bb8c95631a/dragino_lorawan-0.1.0.tar.gz", hash = "sha256:51f6d3a717932553f5433be92e6649a60065715baaabbacaca9bad0ab596640e", size = 14759, upload-time = "2026-11-25T09:39:12.592Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b0/75/1db26200622ce4ef6be4fc551f1fde42e1ca022d706fb359412399e34e69/dragino_lorawan-0.1.0-py3-none-any.whl", hash = "sha256:7d71fb3d6c610b4f3fc3f340df21f8caeaaef80565cd3c0c29a51fc8de1369c9", size = 17079, upload-time = "2026-11-25T09:39:11.579Z" },
+]
+
+[[package]]
 name = "envs"
 version = "1.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1231,6 +1243,7 @@ source = { virtual = "." }
 
 [package.dev-dependencies]
 dev = [
+    { name = "dragino-lorawan" },
     { name = "ha-ffmpeg" },
     { name = "hassil" },
     { name = "homeassistant" },
@@ -1244,6 +1257,7 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "dragino-lorawan", specifier = "==0.1.0" },
     { name = "ha-ffmpeg" },
     { name = "hassil" },
     { name = "homeassistant", git = "https://github.com/home-assistant/core?rev=8e864cd3f180dbbe7fba8fcf29138cb0d3b0b988" },

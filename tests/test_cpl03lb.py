@@ -5,6 +5,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
+from dragino_lorawan import CPL03LB
 from homeassistant.components.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.components.lorawan.websocket_api import _snapshot
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, SOURCE_USER
@@ -24,7 +25,6 @@ from lorawan_connection.mock import MockConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from custom_components.dragino_lorawan._vendor.dragino_lorawan import CPL03LB
 from custom_components.dragino_lorawan.const import DOMAIN
 
 

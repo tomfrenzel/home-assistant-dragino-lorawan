@@ -3,19 +3,18 @@
 from dataclasses import replace
 from datetime import UTC, datetime
 
+from dragino_lorawan import (
+    CPL03LB,
+    LDS02,
+    LHT65,
+    LWL02,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from lorawan_connection import DeviceDescriptor, StatusEvent, UplinkEvent
 from lorawan_connection.mock import MockConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-
-from custom_components.dragino_lorawan._vendor.dragino_lorawan import (
-    CPL03LB,
-    LDS02,
-    LHT65,
-    LWL02,
-)
 
 
 @pytest.fixture(params=[LHT65, LDS02, LWL02, CPL03LB])

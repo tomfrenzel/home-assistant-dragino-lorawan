@@ -26,16 +26,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import (
+from dragino_lorawan import (
     CPL03LB,
     LDS02,
     LHT65,
     LT22222,
     LWL02,
+    ContactDevice,
     DraginoDevice,
 )
-from ._vendor.dragino_lorawan.contact import ContactDevice
+
+from . import DraginoConfigEntry
 from .coordinator import DraginoCoordinator
 from .entity import DraginoEntity, async_setup_entities
 

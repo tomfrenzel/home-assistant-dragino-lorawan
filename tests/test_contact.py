@@ -3,6 +3,7 @@
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+from dragino_lorawan import LDS02, LWL02
 from homeassistant.components.lorawan.websocket_api import _snapshot
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -10,8 +11,6 @@ from lorawan_connection import DeviceDescriptor, RemovedEvent, UplinkEvent
 from lorawan_connection.mock import MockConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-
-from custom_components.dragino_lorawan._vendor.dragino_lorawan import LDS02, LWL02
 
 
 @pytest.fixture(params=[LDS02, LWL02])

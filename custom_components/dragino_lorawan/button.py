@@ -12,8 +12,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from lorawan_connection import ConnectionUnavailable, DownlinkError
 
+from dragino_lorawan import CPL03LB, LWL02
+
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import CPL03LB, LWL02
 from .const import DOMAIN
 from .coordinator import DraginoCoordinator
 

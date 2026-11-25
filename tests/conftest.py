@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
+from dragino_lorawan import LHT65
 from homeassistant.components.lorawan import async_register_connection
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -11,7 +12,6 @@ from lorawan_connection.mock import MockConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from custom_components.dragino_lorawan._vendor.dragino_lorawan import LHT65
 from custom_components.dragino_lorawan.const import DOMAIN
 
 

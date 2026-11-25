@@ -15,8 +15,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from lorawan_connection import DownlinkError
 
+from dragino_lorawan import LWL02
+
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import LWL02
 from .const import DOMAIN
 from .coordinator import DraginoCoordinator
 

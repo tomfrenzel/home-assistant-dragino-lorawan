@@ -10,7 +10,8 @@ from homeassistant.components.lorawan import (
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from ._vendor.dragino_lorawan import DraginoDevices
+from dragino_lorawan import DraginoDevices
+
 from .const import DOMAIN
 
 
