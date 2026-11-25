@@ -86,6 +86,9 @@
       },
       "last_duration": {
         "name": "Last event duration"
+      },
+      "snr": {
+        "name": "Signal-to-noise ratio"
       }
     },
     "switch": {

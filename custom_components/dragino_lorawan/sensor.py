@@ -14,6 +14,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -99,6 +101,9 @@ async def async_setup_entry(
 
     @callback
     def added(coordinator: DraginoCoordinator) -> None:
+        async_add_entities(
+            DeviceSensor(coordinator, description) for description in SIGNAL_SENSORS
+        )
         if isinstance(coordinator.data, (LHT65, LDS02, LWL02, CPL03LB)):
             async_add_entities(
                 [
@@ -151,6 +156,52 @@ class DraginoSensor(DraginoEntity, SensorEntity):
     @override
     def native_value(self) -> float | int | None:
         return self.entity_description.value_fn(self.device, self.channel)
+
+
+@dataclass(frozen=True, kw_only=True)
+class DeviceSensorDescription(SensorEntityDescription):
+    """Describe a value that is not specific to one model."""
+
+    value_fn: Callable[[DraginoDevice], float | None]
+
+
+SIGNAL_SENSORS = (
+    DeviceSensorDescription(
+        key="rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.rssi,
+    ),
+    DeviceSensorDescription(
+        key="snr",
+        translation_key="snr",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.snr,
+    ),
+)
+
+
+class DeviceSensor(LoRaWANEntity[DraginoDevice], SensorEntity):
+    """Represent a value that is not specific to one model."""
+
+    coordinator: DraginoCoordinator
+    entity_description: DeviceSensorDescription
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        return self.coordinator.device_info
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        return self.entity_description.value_fn(self.device)
 
 
 @dataclass(frozen=True, kw_only=True)

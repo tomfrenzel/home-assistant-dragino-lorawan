@@ -76,6 +76,11 @@ Battery percentage is enabled by default. Battery voltage, event count, and
 event duration are diagnostic entities disabled by default; enable them in the
 entity settings if needed.
 
+Every model also has disabled-by-default diagnostic **Signal strength** (RSSI)
+and **Signal-to-noise ratio** (SNR) entities. They show the strongest gateway
+reception of the latest uplink, for any payload port, when the LoRaWAN
+connection reports gateway metadata.
+
 Battery percentage uses LoRaWAN device-status reports when available. LDS02 and
 LWL02 otherwise estimate it from uplink voltage, following the
 [device profile decoders](https://github.com/BenAhrdt/LoRaWANDeviceProfiles/tree/main/DeviceProfiles/Dragino):
