@@ -161,8 +161,8 @@ async def test_firmware_version(
             descriptor=descriptor,
             received_at=datetime.now(UTC),
             f_port=5,
-            data=bytes.fromhex("01ff0113000258"),
+            data=bytes.fromhex("01ff0160000258"),
         )
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "1.1.3"
+    assert hass.states.get(entity_id).state == "1.6.0"
