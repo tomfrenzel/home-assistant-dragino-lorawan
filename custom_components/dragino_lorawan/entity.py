@@ -10,8 +10,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from dragino_lorawan import LT22222, DraginoDevice
+
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import LT22222, DraginoDevice
 from .coordinator import DraginoCoordinator
 
 

@@ -4,6 +4,7 @@ import asyncio
 from datetime import UTC, datetime
 from unittest.mock import patch
 
+from dragino_lorawan import LT22222
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -18,8 +19,6 @@ from lorawan_connection import (
 from lorawan_connection.mock import MockConnection
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-
-from custom_components.dragino_lorawan._vendor.dragino_lorawan import LT22222
 
 
 @pytest.fixture

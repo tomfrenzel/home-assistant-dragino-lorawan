@@ -8,7 +8,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from lorawan_connection import ConnectionUnavailable
 
-from ._vendor.dragino_lorawan import DraginoDevice, DraginoDevices
+from dragino_lorawan import DraginoDevice, DraginoDevices
+
 from .const import DOMAIN
 from .coordinator import DraginoCoordinator
 

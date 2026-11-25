@@ -2,20 +2,19 @@
 
 from datetime import UTC, datetime, timedelta
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from lorawan_connection import DeviceDescriptor, GatewayReception, UplinkEvent
-from lorawan_connection.mock import MockConnection
-import pytest
-from pytest_homeassistant.common import MockConfigEntry
-
-from custom_components.dragino_lorawan._vendor.dragino_lorawan import (
+from dragino_lorawan import (
     CPL03LB,
     LDS02,
     LHT65,
     LT22222,
     LWL02,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from lorawan_connection import DeviceDescriptor, GatewayReception, UplinkEvent
+from lorawan_connection.mock import MockConnection
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 RSSI = "sensor.garden_signal_strength"
 SNR = "sensor.garden_signal_to_noise_ratio"

@@ -5,8 +5,10 @@ use Linux or WSL.
 
 ## Development
 
-The device library is bundled under `custom_components/dragino_lorawan/_vendor`.
-It uses the shared LoRaWAN dependency provided by Home Assistant.
+Device models and payload decoding live in the
+[`dragino-lorawan`](https://github.com/tomfrenzel/dragino-lorawan) library, which
+uses the shared LoRaWAN dependency provided by Home Assistant. Payload and command
+changes belong there; this repository maps devices to Home Assistant entities.
 
 ```sh
 uv sync --group dev
@@ -24,6 +26,7 @@ Tests use Home Assistant's official pytest helpers and an in-memory connection.
 They cover discovery, decoded readings, entity identity, connection loss,
 reconnection, and removal, plus output commands and errors.
 Payload tests use codec examples, including the ChirpStack LDS02 and LWL02 fixtures.
+Decoder-only tests live in the `dragino-lorawan` library.
 LT-22222-L commands were also exercised against a simulated ChirpStack radio during the
 original PoC.
 

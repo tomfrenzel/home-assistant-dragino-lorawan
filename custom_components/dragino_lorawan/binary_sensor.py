@@ -14,8 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from dragino_lorawan import CPL03LB, LDS02, LWL02, DraginoDevice
+
 from . import DraginoConfigEntry
-from ._vendor.dragino_lorawan import CPL03LB, LDS02, LWL02, DraginoDevice
 from .coordinator import DraginoCoordinator
 from .entity import DraginoEntity, async_setup_entities
 
