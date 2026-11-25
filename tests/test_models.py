@@ -11,6 +11,7 @@ import pytest
 from custom_components.dragino_lorawan._vendor.dragino_lorawan import (
     CPL03LB,
     LHT65,
+    LT22222,
     DraginoDevices,
 )
 
@@ -258,3 +259,63 @@ def test_cpl03lb_mode_changes(descriptor: DeviceDescriptor) -> None:
     assert device.pa8_count is None
     assert device.pa8_open is True
     assert device.counts_are_cumulative is None
+
+
+# The first payload is the example in Dragino's LT-22222-L manual:
+# https://docs.dragino.com/docs/LoRaWAN-End-Node/io-controllers-sensor-nodes/lt-22222-l/#34226-query-firmware-version-frequency-band-subband-and-tdc-time
+# The other payloads are synthetic and checked against Dragino's v1.6 decoder:
+# https://github.com/dragino/dragino-end-node-decoder/blob/67dae87d963d5762d2238a0f3c67c0d9a177e7d1/LT22222-L/v1.6_decoder_ttn%20.txt#L112-L155
+@pytest.mark.parametrize(
+    ("payload", "firmware"),
+    [
+        ("01ff0160000258", "1.6.0"),
+        ("0208f2ab0004b0", "2.10.11"),
+        ("0fff0161000258", "1.6.1"),
+    ],
+)
+def test_lt22222_firmware_vectors(
+    descriptor: DeviceDescriptor, payload: str, firmware: str
+) -> None:
+    """Decode the vendor example and independently checked status vectors."""
+    device = LT22222(descriptor)
+    device.handle_event(
+        UplinkEvent(
+            descriptor=descriptor,
+            received_at=datetime(2026, 1, 1, tzinfo=UTC),
+            f_port=5,
+            data=bytes.fromhex(payload),
+        )
+    )
+    assert device.firmware_version == firmware
+
+
+def test_lt22222_status(descriptor: DeviceDescriptor) -> None:
+    """Decode the firmware version of a port-5 status report."""
+    device = LT22222(descriptor)
+    notified = Mock()
+    device.add_update_listener(notified)
+    # EU868, no sub-band, firmware 1.1.3, 600 s interval.
+    status = UplinkEvent(
+        descriptor=descriptor,
+        received_at=datetime(2026, 1, 1, tzinfo=UTC),
+        f_port=5,
+        data=bytes.fromhex("01ff0113000258"),
+    )
+    device.handle_event(status)
+    assert device.firmware_version == "1.1.3"
+    assert device.mode is None
+    assert notified.call_count == 1
+    newer = bytes.fromhex("01ff0220000258")
+    for ignored in (
+        replace(
+            status, received_at=status.received_at - timedelta(seconds=1), data=newer
+        ),
+        replace(status, data=newer[:6]),
+        replace(status, data=newer + b"\x00"),
+        replace(status, data=b"\x00" + newer[1:]),
+        replace(status, data=b"\x10" + newer[1:]),
+        replace(status, f_port=4, data=newer),
+    ):
+        device.handle_event(ignored)
+    assert device.firmware_version == "1.1.3"
+    assert notified.call_count == 1

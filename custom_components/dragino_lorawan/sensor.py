@@ -134,6 +134,8 @@ async def async_setup_entry(
                 CPL03LBSensor(coordinator, description)
                 for description in CPL03LB_SENSORS
             )
+        elif isinstance(coordinator.data, LT22222):
+            async_add_entities([LT22222FirmwareSensor(coordinator)])
 
     entry.async_on_unload(entry.runtime_data.subscribe_coordinator_added(added))
 
@@ -455,3 +457,28 @@ class DraginoBattery(LoRaWANEntity[DraginoDevice], SensorEntity):
         if isinstance(self.device, (LDS02, LWL02)):
             return self.device.battery_percentage
         return None
+
+
+class LT22222FirmwareSensor(LoRaWANEntity[LT22222], SensorEntity):
+    """Represent the LT-22222-L firmware version."""
+
+    coordinator: DraginoCoordinator
+    entity_description = SensorEntityDescription(
+        key="firmware_version",
+        translation_key="firmware_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+
+    def __init__(self, coordinator: DraginoCoordinator) -> None:
+        """Bind the firmware description."""
+        super().__init__(coordinator, self.entity_description)
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        return self.coordinator.device_info
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        return self.device.firmware_version

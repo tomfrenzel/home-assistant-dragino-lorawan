@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from lorawan_connection import (
     AckEvent,
     DeviceDescriptor,
@@ -142,3 +143,26 @@ async def test_timeout(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             "switch", "turn_on", {"entity_id": "switch.garden_relay_1"}, blocking=True
         )
+
+
+@pytest.mark.usefixtures("setup_device")
+async def test_firmware_version(
+    hass: HomeAssistant,
+    mock_connection: MockConnection,
+    descriptor: DeviceDescriptor,
+) -> None:
+    """Show the firmware version from a device-status report."""
+    entity_id = "sensor.garden_firmware_version"
+    assert hass.states.get(entity_id).state == "unknown"
+    entity = er.async_get(hass).async_get(entity_id)
+    assert entity.entity_category is er.EntityCategory.DIAGNOSTIC
+    mock_connection.emit(
+        UplinkEvent(
+            descriptor=descriptor,
+            received_at=datetime.now(UTC),
+            f_port=5,
+            data=bytes.fromhex("01ff0160000258"),
+        )
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "1.6.0"

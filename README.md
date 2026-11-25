@@ -29,15 +29,19 @@ Assistant `config/custom_components` directory and restart.
 
 | Model | Entities | Connections |
 | --- | --- | --- |
-| LT-22222-L | Two relays, two digital outputs, two digital inputs, voltage, current, and counters | ChirpStack and The Things Network / The Things Stack |
+| LT-22222-L | Two relays, two digital outputs, two digital inputs, voltage, current, counters, and firmware | ChirpStack and The Things Network / The Things Stack |
 | LDS02 | Door state, open alarm, event count, last opening duration, battery percentage, and battery voltage | ChirpStack and The Things Network / The Things Stack |
 | LWL02 | Water leak, event count, last leak duration, battery percentage, battery voltage, reporting interval, and Request reset | ChirpStack and The Things Network / The Things Stack |
 | LHT65 | Temperature, humidity, battery percentage, battery voltage, and external probe readings | The Things Network / The Things Stack |
 | CPL03-LB | Single contact and alarm, three pulse counters or three contact inputs, last event duration, battery percentage, battery voltage, firmware, work mode, and Request device status | ChirpStack and The Things Network / The Things Stack |
 
-LT-22222-L input measurements depend on its reporting mode. LHT65 illuminance,
-external voltage, and external counter entities are disabled by default; enable
-the ones that match your attached probe.
+LT-22222-L input measurements depend on its reporting mode. Its firmware version
+remains unknown until a port-5 device-status report arrives. The integration does
+not request this report; [Dragino's manual](https://docs.dragino.com/docs/LoRaWAN-End-Node/io-controllers-sensor-nodes/lt-22222-l/#34226-query-firmware-version-frequency-band-subband-and-tdc-time)
+describes requesting it with a `26 01` downlink.
+
+LHT65 illuminance, external voltage, and external counter entities are disabled by
+default; enable the ones that match your attached probe.
 
 Relay and digital-output commands wait up to 30 seconds for acknowledgement.
 Their state changes when the device reports it. A timeout does not remove a
