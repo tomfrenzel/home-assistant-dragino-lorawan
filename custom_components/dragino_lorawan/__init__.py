@@ -8,10 +8,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from lorawan_connection import ConnectionUnavailable
 
-from dragino_lorawan import DraginoDevice, DraginoDevices
+from dragino_lorawan import DraginoDevice
 
 from .const import DOMAIN
 from .coordinator import DraginoCoordinator
+from .device_collection import TimestampedDraginoDevices
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type DraginoConfigEntry = ConfigEntry[DeviceManager[DraginoDevice, DraginoCoordinator]]
@@ -29,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DraginoConfigEntry) -> N
     manager = entry.runtime_data = DeviceManager(
         hass,
         entry,
-        create_collection=DraginoDevices,
+        create_collection=TimestampedDraginoDevices,
         create_coordinator=DraginoCoordinator,
     )
     entry.async_on_unload(manager.close)

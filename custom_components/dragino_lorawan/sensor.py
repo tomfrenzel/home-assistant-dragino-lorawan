@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components.lorawan import LoRaWANEntity
@@ -165,7 +166,12 @@ class DraginoSensor(DraginoEntity, SensorEntity):
 class DeviceSensorDescription(SensorEntityDescription):
     """Describe a value that is not specific to one model."""
 
-    value_fn: Callable[[DraginoDevice], float | None]
+    value_fn: Callable[[DraginoDevice], datetime | float | None]
+
+
+def _last_uplink(device: DraginoDevice) -> datetime | None:
+    """Return the timestamp tracked by the integration's device collection."""
+    return getattr(device, "last_uplink", None)
 
 
 SIGNAL_SENSORS = (
@@ -187,6 +193,22 @@ SIGNAL_SENSORS = (
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.snr,
     ),
+    DeviceSensorDescription(
+        key="last_uplink",
+        translation_key="last_uplink",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_last_uplink,
+    ),
+    DeviceSensorDescription(
+        key="last_status",
+        translation_key="last_status",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: (
+            device.latest_status.received_at if device.latest_status else None
+        ),
+    ),
 )
 
 
@@ -203,7 +225,7 @@ class DeviceSensor(LoRaWANEntity[DraginoDevice], SensorEntity):
 
     @property
     @override
-    def native_value(self) -> float | None:
+    def native_value(self) -> datetime | float | None:
         return self.entity_description.value_fn(self.device)
 
 

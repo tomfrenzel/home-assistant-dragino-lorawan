@@ -13,6 +13,7 @@ from lorawan_connection import (
     ConnectionUnavailable,
     DeviceDescriptor,
     RemovedEvent,
+    StatusEvent,
     UpdatedEvent,
     UplinkEvent,
 )
@@ -71,6 +72,52 @@ async def test_readings(
     )
     assert not er.async_entries_for_config_entry(
         er.async_get(hass), config_entry.entry_id
+    )
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("connection_entry")
+async def test_device_timestamps(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_connection: MockConnection,
+    descriptor: DeviceDescriptor,
+) -> None:
+    """Expose the latest uplink and status event timestamps."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.garden_last_uplink").state == "unknown"
+    assert hass.states.get("sensor.garden_last_status").state == "unknown"
+
+    uplink = UplinkEvent(
+        received_at=datetime(2026, 1, 1, tzinfo=UTC),
+        descriptor=descriptor,
+        f_port=2,
+        data=bytes.fromhex("cbf60b0d0376010add7fff"),
+    )
+    mock_connection.emit(uplink)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.garden_last_uplink").state == (
+        uplink.received_at.isoformat()
+    )
+    mock_connection.emit(
+        replace(uplink, received_at=datetime(2025, 12, 31, tzinfo=UTC))
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.garden_last_uplink").state == (
+        uplink.received_at.isoformat()
+    )
+
+    status = StatusEvent(
+        descriptor=descriptor,
+        received_at=datetime(2026, 1, 2, tzinfo=UTC),
+        battery_level=72,
+        battery_level_unavailable=False,
+    )
+    mock_connection.emit(status)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.garden_last_status").state == (
+        status.received_at.isoformat()
     )
     await hass.config_entries.async_unload(config_entry.entry_id)
 

@@ -87,6 +87,12 @@
       "last_duration": {
         "name": "Last event duration"
       },
+      "last_uplink": {
+        "name": "Last uplink"
+      },
+      "last_status": {
+        "name": "Last status"
+      },
       "snr": {
         "name": "Signal-to-noise ratio"
       }
